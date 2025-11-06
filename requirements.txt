@@ -1,0 +1,32 @@
+# Core Framework
+langchain==0.2.17
+langchain-core==0.2.43
+#langchain-openai==0.0.5
+langgraph==0.0.55
+langchain-community==0.2.19
+
+# LLM Provider
+openai==1.12.0
+
+# Search & Web Tools
+tavily-python==0.3.3
+beautifulsoup4==4.12.3
+requests==2.31.0
+lxml==5.1.0
+readability-lxml==0.8.1
+
+# RAG & Embeddings
+chromadb==0.4.22
+sentence-transformers==2.3.1
+
+# UI
+streamlit==1.31.0
+plotly==5.18.0
+
+# Utilities
+python-dotenv==1.0.1
+pydantic==2.6.1
+pydantic-settings==2.1.0
+
+# Optional (for monitoring)
+# langsmith==0.0.87

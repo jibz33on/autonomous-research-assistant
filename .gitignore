@@ -1,0 +1,28 @@
+# Environment
+.env
+venv/
+env/
+*.pyc
+__pycache__/
+
+# Data
+data/
+*.db
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Chroma
+chroma_db/
+# local secrets
+.env
+.env.local
+.env.*.local
+
