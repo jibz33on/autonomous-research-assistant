@@ -1,47 +1,78 @@
-"""Executor Agent - Searches and collects documents."""
+"""Executor agent - collects research documents."""
+
 from typing import List, Dict
-from ..tools.websearch import TavilySearch
-from ..tools.scraper import WebScraper
-from ..utils.config import settings
-from ..utils.logging import setup_logger
+from src.tools.websearch import TavilySearch
+from src.tools.scraper import WebScraper
+from src.utils.config import settings
+from src.utils.logging import setup_logger
 
 logger = setup_logger(__name__)
 
+
 class ExecutorAgent:
-    """Agent that executes searches and collects information."""
+    """Executes research plan by collecting documents."""
     
     def __init__(self):
-        """Initialize executor with search and scraping tools."""
-        self.search_tool = TavilySearch()
+        """Initialize search and scraper tools."""
+        self.search = TavilySearch()
         self.scraper = WebScraper()
-        logger.info("Initialized Executor Agent")
+        logger.info("ExecutorAgent initialized")
     
     def execute_research(self, queries: List[str]) -> List[Dict]:
         """
-        Execute search queries and collect documents.
+        Execute research by searching and scraping documents.
         
         Args:
-            queries: List of search queries from planner
+            queries: List of search queries
             
         Returns:
-            List of document dicts with keys: url, title, content, source
+            List of documents with content and metadata
         """
-        # TODO: Implement on weekend
-        # 1. For each query in queries:
-        #    a. Search using self.search_tool.search(query)
-        #    b. Take top N results (from config)
-        #    c. For each result, scrape the URL
-        #    d. Create document dict with metadata
-        # 2. Collect all documents in a list
-        # 3. Filter out failed scrapes (None content)
-        # 4. Log statistics (queries executed, docs collected)
-        # 5. Return list of documents
-        # Document format:
-        # {
-        #     'url': '...',
-        #     'title': '...',
-        #     'content': '...',
-        #     'source': 'web',
-        #     'query': '...'  # which query found this
-        # }
-        pass
+        try:
+            logger.info(f"Executing research with {len(queries)} queries")
+            
+            all_documents = []
+            
+            for query in queries:
+                logger.info(f"Processing query: '{query}'")
+                
+                # Step 1: Search
+                search_results = self.search.search(query)
+                
+                if not search_results:
+                    logger.warning(f"No results for query: '{query}'")
+                    continue
+                
+                # Step 2: Get URLs to scrape (limit per query)
+                urls_to_scrape = [
+                    r['url'] for r in search_results[:settings.max_sources_per_query]
+                ]
+                
+                # Step 3: Scrape URLs
+                scraped_content = self.scraper.scrape_multiple(urls_to_scrape)
+                
+                # Step 4: Build documents
+                for result in search_results[:settings.max_sources_per_query]:
+                    url = result['url']
+                    content = scraped_content.get(url)
+                    
+                    # Only add if scraping succeeded
+                    if content:
+                        document = {
+                            'url': url,
+                            'title': result['title'],
+                            'content': content,
+                            'source': 'web',
+                            'query': query
+                        }
+                        all_documents.append(document)
+                
+                logger.info(f"Collected {len([d for d in all_documents if d['query'] == query])} "
+                           f"documents for query: '{query}'")
+            
+            logger.info(f"Total documents collected: {len(all_documents)}")
+            return all_documents
+            
+        except Exception as e:
+            logger.error(f"Failed to execute research: {e}")
+            raise

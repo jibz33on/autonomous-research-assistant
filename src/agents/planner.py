@@ -1,34 +1,55 @@
-"""Planner Agent - Breaks down research topic."""
+"""Planner agent - creates research strategy."""
+
 from typing import Dict
-from ..llm.client import LLMClient
-from ..llm.prompts import PLANNER_SYSTEM_PROMPT, PLANNER_USER_TEMPLATE
-from ..utils.config import settings
-from ..utils.logging import setup_logger
+from src.llm.client import LLMClient
+from src.llm.prompts import PLANNER_SYSTEM_PROMPT, PLANNER_USER_TEMPLATE
+from src.utils.config import settings
+from src.utils.logging import setup_logger
 
 logger = setup_logger(__name__)
 
+
 class PlannerAgent:
-    """Agent that plans the research strategy."""
+    """Analyzes research topics and creates strategic plans."""
     
     def __init__(self):
         """Initialize planner with LLM client."""
         self.llm = LLMClient(temperature=settings.temperature_planner)
-        logger.info("Initialized Planner Agent")
+        logger.info("PlannerAgent initialized")
     
     def create_plan(self, topic: str) -> Dict:
         """
-        Create research plan with subtopics and search queries.
+        Create a research plan for the given topic.
         
         Args:
-            topic: Research topic provided by user
+            topic: Research topic to analyze
             
         Returns:
-            dict with 'subtopics' and 'search_queries'
+            Dict with:
+            - subtopics: List[str] - Key areas to research
+            - search_queries: List[str] - Specific queries to execute
         """
-        # TODO: Implement on weekend
-        # 1. Format user message with PLANNER_USER_TEMPLATE
-        # 2. Call self.llm.invoke_with_json() with system prompt and user message
-        # 3. Validate response has required keys
-        # 4. Log the plan
-        # 5. Return the plan dict
-        pass
+        try:
+            logger.info(f"Creating research plan for: '{topic}'")
+            
+            # Format user message
+            user_message = PLANNER_USER_TEMPLATE.format(topic=topic)
+            
+            # Call LLM with JSON mode
+            plan = self.llm.invoke_with_json(
+                system_prompt=PLANNER_SYSTEM_PROMPT,
+                user_message=user_message
+            )
+            
+            # Validate response
+            if 'subtopics' not in plan or 'search_queries' not in plan:
+                raise ValueError("LLM response missing required fields")
+            
+            logger.info(f"Plan created: {len(plan['subtopics'])} subtopics, "
+                       f"{len(plan['search_queries'])} queries")
+            
+            return plan
+            
+        except Exception as e:
+            logger.error(f"Failed to create plan for '{topic}': {e}")
+            raise
