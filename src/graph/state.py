@@ -1,28 +1,39 @@
-"""State schema for LangGraph workflow."""
+"""
+LangGraph State Definition
+Defines the data structure that flows through the research workflow.
+"""
+
 from typing import TypedDict, List, Dict, Annotated
 import operator
 
+
 class ResearchState(TypedDict):
-    """State that flows through the research workflow."""
+    """
+    State schema for the research workflow.
     
-    # Input
-    topic: str
+    Fields are accumulated/updated as the workflow progresses through nodes.
+    Using Annotated with operator.add for fields that should accumulate.
+    """
     
-    # Planner outputs
-    subtopics: List[str]
-    search_queries: List[str]
+    # INPUT - User provides
+    topic: str  # The research topic
     
-    # Executor outputs
-    documents: Annotated[List[Dict], operator.add]  # Accumulate documents
+    # PLANNER OUTPUTS
+    subtopics: List[str]  # Key areas identified for research
+    search_queries: List[str]  # Specific queries to execute
     
-    # RAG
-    session_id: str
+    # EXECUTOR OUTPUTS
+    # Using Annotated with operator.add to accumulate documents across iterations
+    documents: Annotated[List[Dict], operator.add]  # Collected documents with metadata
     
-    # Synthesizer outputs
-    report: str
-    sources: List[str]
+    # RAG SESSION
+    session_id: str  # Unique ID for vector store collection
     
-    # Metadata
-    status: str
-    logs: Annotated[List[str], operator.add]  # Accumulate logs
-    error: str  # Store any errors
+    # SYNTHESIZER OUTPUTS
+    report: str  # Final research report
+    sources: List[str]  # List of source URLs used
+    
+    # METADATA
+    status: str  # Current workflow status
+    logs: Annotated[List[str], operator.add]  # Activity log (accumulates)
+    error: str  # Error message if something fails
