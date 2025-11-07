@@ -2,6 +2,7 @@
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from typing import List, Dict, Optional
+import json
 from ..utils.config import settings
 from ..utils.logging import setup_logger
 
@@ -39,12 +40,17 @@ class LLMClient:
         Returns:
             LLM response as string
         """
-        # TODO: Implement on weekend
-        # 1. Create messages list with SystemMessage and HumanMessage
-        # 2. Call self.llm.invoke(messages)
-        # 3. Extract and return content
-        # 4. Add error handling
-        pass
+        try:
+            messages = [
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_message)
+            ]
+            response = self.llm.invoke(messages)
+            return response.content
+            
+        except Exception as e:
+            logger.error(f"LLM invocation failed: {str(e)}")
+            raise
     
     def invoke_with_json(self, system_prompt: str, user_message: str) -> Dict:
         """
@@ -57,9 +63,23 @@ class LLMClient:
         Returns:
             Parsed JSON response as dict
         """
-        # TODO: Implement on weekend
-        # 1. Add JSON formatting instruction to system prompt
-        # 2. Call invoke()
-        # 3. Parse response as JSON
-        # 4. Handle JSON parsing errors
-        pass
+        try:
+            # Add JSON instruction to system prompt
+            json_system_prompt = system_prompt + "\n\nYou must respond with valid JSON only."
+            
+            messages = [
+                SystemMessage(content=json_system_prompt),
+                HumanMessage(content=user_message)
+            ]
+            response = self.llm.invoke(messages)
+            
+            # Parse JSON response
+            return json.loads(response.content)
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response: {str(e)}")
+            logger.error(f"Response was: {response.content}")
+            raise
+        except Exception as e:
+            logger.error(f"LLM JSON invocation failed: {str(e)}")
+            raise
