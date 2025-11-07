@@ -1,8 +1,8 @@
 """Document parsing utilities."""
 from typing import List, Dict
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from ..utils.config import settings
-from ..utils.logging import setup_logger
+from src.utils.config import settings
+from src.utils.logging import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -30,12 +30,23 @@ class DocumentParser:
         Returns:
             List of chunks with metadata
         """
-        # TODO: Implement on weekend
-        # 1. Use self.text_splitter.split_text(text)
-        # 2. Create list of dicts with chunk text + metadata
-        # 3. Add chunk index to each chunk's metadata
-        # Format: [{'text': '...', 'metadata': {...}}, ...]
-        pass
+        # Split text into chunks
+        chunks = self.text_splitter.split_text(text)
+        
+        # Format as list of dicts with metadata
+        result = []
+        for i, chunk in enumerate(chunks):
+            result.append({
+                'text': chunk,
+                'metadata': {
+                    **metadata,  # Include original metadata
+                    'chunk_index': i,
+                    'total_chunks': len(chunks)
+                }
+            })
+        
+        logger.info(f"Chunked document into {len(chunks)} pieces")
+        return result
     
     def chunk_multiple_documents(self, documents: List[Dict]) -> List[Dict]:
         """
@@ -47,7 +58,20 @@ class DocumentParser:
         Returns:
             List of all chunks from all documents
         """
-        # TODO: Implement on weekend
-        # Loop through documents and call chunk_document for each
-        # Combine all chunks into single list
-        pass
+        all_chunks = []
+        
+        for doc in documents:
+            text = doc.get('content', '')
+            if not text:
+                logger.warning(f"Skipping document with no content: {doc.get('url', 'unknown')}")
+                continue
+            
+            # Extract metadata (everything except 'content')
+            metadata = {k: v for k, v in doc.items() if k != 'content'}
+            
+            # Chunk this document
+            chunks = self.chunk_document(text, metadata)
+            all_chunks.extend(chunks)
+        
+        logger.info(f"Chunked {len(documents)} documents into {len(all_chunks)} total chunks")
+        return all_chunks

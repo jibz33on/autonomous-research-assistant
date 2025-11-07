@@ -1,44 +1,65 @@
-"""Web scraping tool using BeautifulSoup and readability."""
+"""Web scraper for extracting article content."""
+
 import requests
 from bs4 import BeautifulSoup
 from readability import Document
-from typing import Optional
-from ..utils.config import settings
-from ..utils.logging import setup_logger
+from typing import Optional, List, Dict
+from src.utils.config import settings
+from src.utils.logging import setup_logger
 
 logger = setup_logger(__name__)
 
+
 class WebScraper:
-    """Scrapes and extracts clean text from web pages."""
+    """Scrapes web pages and extracts main content."""
     
-    def __init__(self):
-        """Initialize web scraper."""
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (compatible; ResearchBot/1.0)'
-        })
-        logger.info("Initialized web scraper")
+    def __init__(self, timeout: int = 10):
+        """
+        Initialize scraper.
+        
+        Args:
+            timeout: Request timeout in seconds
+        """
+        self.timeout = timeout
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+        logger.info("Web scraper initialized")
     
     def scrape_url(self, url: str) -> Optional[str]:
         """
-        Scrape and extract main content from URL.
+        Scrape a single URL and extract main content.
         
         Args:
             url: URL to scrape
             
         Returns:
-            Cleaned text content, or None if scraping fails
+            Cleaned text content, or None if failed
         """
-        # TODO: Implement on weekend
-        # 1. Fetch URL with self.session.get() with timeout
-        # 2. Check response status code
-        # 3. Use readability.Document to extract main content
-        # 4. Parse with BeautifulSoup to get clean text
-        # 5. Remove extra whitespace
-        # 6. Add error handling (try/except)
-        # 7. Log successes and failures
-        # 8. Return cleaned text or None
-        pass
+        try:
+            logger.info(f"Scraping: {url}")
+            
+            # Download HTML
+            response = requests.get(url, headers=self.headers, timeout=self.timeout)
+            response.raise_for_status()
+            
+            # Extract main content using readability
+            doc = Document(response.text)
+            html_content = doc.summary()
+            
+            # Convert to clean text
+            soup = BeautifulSoup(html_content, 'html.parser')
+            text = soup.get_text(separator='\n', strip=True)
+            
+            # Remove extra whitespace
+            text = '\n'.join(line.strip() for line in text.splitlines() if line.strip())
+            
+            logger.info(f"Scraped {len(text)} characters from {url}")
+            return text
+            
+        except Exception as e:
+            logger.error(f"Failed to scrape {url}: {str(e)}")
+            return None
     
     def scrape_multiple(self, urls: List[str]) -> Dict[str, Optional[str]]:
         """
@@ -48,9 +69,15 @@ class WebScraper:
             urls: List of URLs to scrape
             
         Returns:
-            Dict mapping URL to scraped content (or None if failed)
+            Dict mapping url -> content (None if failed)
         """
-        # TODO: Implement on weekend
-        # Simple loop calling scrape_url for each URL
-        # Return dict: {url: content}
-        pass
+        results = {}
+        
+        for url in urls:
+            content = self.scrape_url(url)
+            results[url] = content
+        
+        success_count = sum(1 for v in results.values() if v is not None)
+        logger.info(f"Scraped {success_count}/{len(urls)} URLs successfully")
+        
+        return results

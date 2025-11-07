@@ -1,8 +1,8 @@
 """Tavily web search tool."""
 from typing import List, Dict, Optional
 from tavily import TavilyClient
-from ..utils.config import settings
-from ..utils.logging import setup_logger
+from src.utils.config import settings
+from src.utils.logging import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -25,19 +25,25 @@ class TavilySearch:
         Returns:
             List of search results with keys: url, title, content, score
         """
-        # TODO: Implement on weekend
-        # 1. Use self.client.search() with query
-        # 2. Set max_results from parameter or config
-        # 3. Extract relevant fields from response
-        # 4. Add error handling and logging
-        # 5. Return formatted results
-        # Example return format:
-        # [
-        #     {
-        #         'url': 'https://example.com',
-        #         'title': 'Example Title',
-        #         'content': 'Snippet of content...',
-        #         'score': 0.95
-        #     }
-        # ]
-        pass
+        try:
+            # Use config default if max_results not provided
+            max_results = max_results or settings.max_search_results
+            
+            logger.info(f"Searching: '{query}' (max_results={max_results})")
+            
+            # Call Tavily API
+            response = self.client.search(
+                query=query,
+                max_results=max_results,
+                search_depth="basic"
+            )
+            
+            # Extract results
+            results = response.get('results', [])
+            logger.info(f"Found {len(results)} results")
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Search failed for '{query}': {str(e)}")
+            return []
