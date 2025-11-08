@@ -1,6 +1,6 @@
 """LLM client wrapper for OpenAI."""
-#from langchain_openai import ChatOpenAI
-from langchain.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI 
+#from langchain.chat_models import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from typing import List, Dict, Optional
 import json
