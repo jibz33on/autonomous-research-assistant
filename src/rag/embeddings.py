@@ -34,7 +34,7 @@ class CustomOpenAIEmbedding(EmbeddingFunction):
         Returns:
             List of embedding vectors
         """
-        # Call new OpenAI API
+        # Call OpenAI API
         response = self.client.embeddings.create(
             input=input,
             model=self.model

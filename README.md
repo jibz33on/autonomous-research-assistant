@@ -29,6 +29,9 @@ The Autonomous Research Assistant uses cutting-edge AI technologies to conduct e
 
 ## 🏗️ Architecture
 
+![Architecture Diagram]
+(./assets/architecture-diagram.png)
+
 The system follows a layered architecture with 6 layers:
 ```
 Layer 0: Foundation
